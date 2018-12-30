@@ -5,10 +5,10 @@ import matplotlib
 from matplotlib import pyplot as plt
 
 
-dataSetPaths = ['/raid/users/akindiroglu/Workspace/Data/HandShapeClassification/ASL_FINGERSPELLING/ds5',
-                '/raid/users/akindiroglu/Workspace/Data/HandShapeClassification/ASL_FINGERSPELLING/ds9',
-                '/raid/users/akindiroglu/Workspace/Data/HandShapeClassification/HGR/original_images',
-                '/raid/users/akindiroglu/Workspace/Data/HandShapeClassification/LSA16']
+dataSetPaths = ['/dark/Databases/HandShapeClassification/ASL_FINGERSPELLING/ds5',
+                '/dark/Databases/HandShapeClassification/ASL_FINGERSPELLINGds9',
+                '/dark/Databases/HandShapeClassification/HGR/original_images',
+                '/dark/Databases/HandShapeClassification/LSA16']
 
 dataSetNames = ['ds5','ds9','hgr','lsa16']
 

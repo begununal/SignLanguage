@@ -1,5 +1,5 @@
 from dataLoader import readImageDatasets
-from keras.layers import Input, Dense, Conv2D, MaxPooling2D, UpSampling2D
+from keras.layers import Input, Dense, Conv2D, MaxPooling2D, UpSampling2D, ZeroPadding2D, Conv2DTranspose, Deconvolution2D, Flatten, Activation, Concatenate
 from keras.models import Model
 from keras.datasets import mnist
 from keras.callbacks import TensorBoard
@@ -41,24 +41,24 @@ def runFeatureExtraction(numEpochs,convLayerCount,convFilterSize,FilterCount,Inp
     #x_val = x_val[np.linspace(0, x_val.shape[0]-1, num=500).astype(dtype=np.uint32)]
     #y_val = y_val[np.linspace(0, y_val.shape[0]-1, num=500).astype(dtype=np.uint32)]
     input_img = Input(shape=(InputImageSize, InputImageSize, 3))
-    encoded = input_img
-    encoded = Conv2D(FilterCount, (convFilterSize, convFilterSize), activation='relu', padding='same')(encoded)
-    print(encoded.shape)
-    encoded = Conv2D(FilterCount, (convFilterSize, convFilterSize), activation='relu', padding='same')(encoded)
-    print(encoded.shape)
-    encoded = Conv2D(FilterCount, (convFilterSize, convFilterSize), activation='relu', strides=2, padding='same')(encoded)
-    print(encoded.shape)
+    encoded1 = input_img
+    encoded2 = Conv2D(FilterCount, (convFilterSize, convFilterSize), activation='relu', padding='same')(encoded1)
+    print(encoded2.shape)
+    encoded3 = Conv2D(FilterCount, (convFilterSize, convFilterSize), activation='relu', padding='same')(encoded2)
+    print(encoded3.shape)
+    encoded4 = Conv2D(FilterCount, (convFilterSize, convFilterSize), activation='relu', strides=2, padding='same')(encoded3)
+    print(encoded4.shape)
     FilterCount *= 2
-    encoded = Conv2D(FilterCount, (convFilterSize, convFilterSize), activation='relu', padding='same')(encoded)
-    print(encoded.shape)
-    encoded = Conv2D(FilterCount, (convFilterSize, convFilterSize), activation='relu', padding='same')(encoded)
-    print(encoded.shape)
-    encoded = Conv2D(FilterCount, (convFilterSize, convFilterSize), activation='relu', strides=2, padding='same')(encoded)
-    print(encoded.shape)
-    encoded = Conv2D(FilterCount, (convFilterSize, convFilterSize), activation='relu', padding='same')(encoded)
-    print(encoded.shape)
-    encoded = Conv2D(FilterCount, (convFilterSize, convFilterSize), activation='relu', padding='same')(encoded)
-    print(encoded.shape)
+    encoded5 = Conv2D(FilterCount, (convFilterSize, convFilterSize), activation='relu', padding='same')(encoded4)
+    print(encoded5.shape)
+    encoded6 = Conv2D(FilterCount, (convFilterSize, convFilterSize), activation='relu', padding='same')(encoded5)
+    print(encoded6.shape)
+    encoded7 = Conv2D(FilterCount, (convFilterSize, convFilterSize), activation='relu', strides=2, padding='same')(encoded6)
+    print(encoded7.shape)
+    encoded8 = Conv2D(FilterCount, (convFilterSize, convFilterSize), activation='relu', padding='same')(encoded7)
+    print(encoded8.shape)
+    encoded9 = Conv2D(FilterCount, (1, 1), activation='relu', padding='same')(encoded8)
+    print(encoded9.shape)
 
     """
     conv1 = Conv2D(32, (convFilterSize, convFilterSize), activation='relu', padding='same')(input_img)
@@ -67,27 +67,33 @@ def runFeatureExtraction(numEpochs,convLayerCount,convFilterSize,FilterCount,Inp
     pool2 = MaxPooling2D(pool_size=(2, 2))(conv2)
     conv3 = Conv2D(8, (convFilterSize, convFilterSize), activation='relu', padding='same',name='encoded')(pool2)
     """
-    decoded = encoded
-    decoded = Conv2D(FilterCount, (convFilterSize, convFilterSize), activation='relu', padding='same')(decoded)
+    decoded = Conv2D(FilterCount, (1, 1), activation='relu', padding='same')(encoded9)
     print(decoded.shape)
     decoded = Conv2D(FilterCount, (convFilterSize, convFilterSize), activation='relu', padding='same')(decoded)
     print(decoded.shape)
-    decoded = UpSampling2D((2, 2))(decoded)
-    print(decoded.shape)
+    decoded = Concatenate()([encoded8, decoded])
     decoded = Conv2D(FilterCount, (convFilterSize, convFilterSize), activation='relu', padding='same')(decoded)
     print(decoded.shape)
+    decoded = Concatenate()([encoded7, decoded])
+    templayer = Conv2DTranspose(FilterCount, (convFilterSize, convFilterSize), activation='relu', padding='same', strides=(2, 2), use_bias=False, data_format="channels_last")
+    decoded = templayer(decoded)
+    print(decoded.shape)
+    decoded = Concatenate()([encoded6, decoded])
     decoded = Conv2D(FilterCount, (convFilterSize, convFilterSize), activation='relu', padding='same')(decoded)
     print(decoded.shape)
     FilterCount = int(FilterCount / 2)
-    print(FilterCount)
-    decoded = UpSampling2D((2, 2))(decoded)
-    print(decoded.shape)
+    decoded = Concatenate()([encoded5, decoded])
     decoded = Conv2D(FilterCount, (convFilterSize, convFilterSize), activation='relu', padding='same')(decoded)
     print(decoded.shape)
+    decoded = Concatenate()([encoded4, decoded])
+    decoded = Conv2DTranspose(FilterCount, (convFilterSize, convFilterSize), activation='relu', padding='same', strides=(2, 2), use_bias=False, data_format="channels_last")(decoded)
+    print(decoded.shape)
+    decoded = Concatenate()([encoded3, decoded])
     decoded = Conv2D(FilterCount, (convFilterSize, convFilterSize), activation='relu', padding='same')(decoded)
     print(decoded.shape)
-    decoded = Conv2D(3, (1, 1), activation='relu', padding='same')(decoded)
-
+    decoded = Concatenate()([encoded2, decoded])
+    decoded = Conv2D(3, (convFilterSize, convFilterSize), activation='relu', padding='same')(decoded)
+    print(decoded.shape)
     """
     conv4 = Conv2D(8, (convFilterSize, convFilterSize), activation='relu', padding='same')(conv3)
     up1 = UpSampling2D((2, 2))(conv4)
@@ -98,7 +104,7 @@ def runFeatureExtraction(numEpochs,convLayerCount,convFilterSize,FilterCount,Inp
 
     autoencoder = Model(input_img, decoded)
     autoencoder.compile(optimizer='adadelta', loss='binary_crossentropy')
-
+    autoencoder.summary()
     x_train = x_train.astype('float32') / 255.
     x_val = x_val.astype('float32') / 255.
 
